@@ -48,11 +48,25 @@ public abstract class Enumeration : IComparable {
 }
 
 public static class VectorUtil {
-    public static Vector3 RotateAroundY(this ref Vector3 vector, float angle) {
-        angle = angle * Mathf.Deg2Rad;
+    public static Vector3 RotateAroundY(this ref Vector3 vector, float angleInDegree) {
+        var angleInRadian = angleInDegree * Mathf.Deg2Rad;
         float x = vector.x, z = vector.z;
-        vector.x = x * Mathf.Cos(angle) - z * Mathf.Sin(angle);
-        vector.z = x * Mathf.Sin(angle) + z * Mathf.Cos(angle);
+        float cos = Mathf.Cos(angleInRadian);
+        float sin = Mathf.Sin(angleInRadian);
+        vector.x = x * cos - z * sin;
+        vector.z = x * sin + z * cos;
+        return vector;
+    }
+
+    public static Vector3 RotateAroundZ(this ref Vector3 vector, float angleInDegree) {
+        var angleInRadian = angleInDegree * Mathf.Deg2Rad;
+        float x = vector.x;
+        float y = vector.y;
+        float cos = Mathf.Cos(angleInRadian);
+        float sin = Mathf.Sin(angleInRadian);
+
+        vector.x = x * cos - y * sin;
+        vector.y = x * sin + y * cos;
         return vector;
     }
 
@@ -60,6 +74,36 @@ public static class VectorUtil {
         vector.y = 0;
         return vector;
     }
+    public static Vector3 ProjectedXYPlane(this Vector3 vector) {
+        vector.z = 0;
+        return vector;
+    }
+    public static Vector3 ProjectedYZPlane(this Vector3 vector) {
+        vector.x = 0;
+        return vector;
+    }
+
+    public static float DirectionToYawInDegrees(this Vector3 forward) {
+        var xzForward = new Vector3(forward.x, 0, forward.z); xzForward.Normalize();
+        //yaw == xz평면 북쪽 벡터와 xz평면 방향벡터 사이의 각 -> -180 ~ 180 사이의 값
+        return Vector3.SignedAngle(Vector3.forward, xzForward, Vector3.up);
+    }
+
+    public static float Dot(this Vector3 vec, Vector3 other) {
+        return Vector3.Dot(vec, other);
+    }
+
+    public static Vector3 MultiplyEach(this Vector3 vec, Vector3 other) {
+        return new Vector3(vec.x * other.x, vec.y * other.y, vec.z * other.z);
+    }
+
+    public static float Distance(this Vector3 vec, Vector3 other) {
+        return Vector3.Distance(vec, other);
+    }
+    public static float DistanceSquared(this Vector3 vec, Vector3 other) {
+        return (other - vec).sqrMagnitude;
+    }
+
 }
 
 public static class ColorUtil {
@@ -71,4 +115,36 @@ public static class ColorUtil {
             && Mathf.Abs(color.a - other.a) <= epsilon;
     }
 
+}
+
+public static class VRUtil {
+    public static bool IsTriggerPressed => // 디버그중에는 anyKeyDown, 실행환경에서는 카드보드 API 사용
+#if UNITY_EDITOR
+        Input.anyKeyDown;
+#else
+            Google.XR.Cardboard.Api.IsTriggerPressed;
+#endif
+    
+    public static bool IsTriggerPressing {
+        get {
+#if UNITY_EDITOR
+            return Input.anyKey;
+#else
+            if(Input.touchCount <= 0) return false;
+            Touch touch = Input.GetTouch(0);
+            return touch.phase == TouchPhase.Stationary || touch.phase == TouchPhase.Moved;
+#endif 
+        }
+    }
+}
+
+public static class Util {
+    public static T GetOrAddComponent<T>(this GameObject from) where T : Component {
+        var component = from.GetComponent<T>();
+        return component ? component : from.AddComponent<T>();
+    }
+    public static T GetOrAddComponent<T>(this Component from) where T : Component {
+        var component = from.GetComponent<T>();
+        return component ? component : from.gameObject.AddComponent<T>();
+    }
 }

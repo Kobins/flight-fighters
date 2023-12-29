@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UI.HUD;
 using UnityEngine;
 
 //Standard Assets의 AeroplaneController 기반
@@ -8,6 +9,10 @@ public class Aeroplane : ArmoredVehicle {
         if (!collision.collider.CompareTag("Terrain")) return;
         Damage(collision.impulse.magnitude);
     }
+
+    [Header("Object Binding")] 
+    public Transform cameraPosition;
+    public UICockpit cockpitUI;
 
     [Header("AttackAngle Effects")]
     public float attackAngle = 0.5f;
@@ -222,18 +227,19 @@ public class Aeroplane : ArmoredVehicle {
     }
 
     void ApplyTorques() {
+        var t = transform;
         var torque = Vector3.zero;
 
         //각 축에 대한 yaw, pitch, roll 회전
-        torque += -pitchInput * m_PitchSensivity * transform.right;
-        torque += yawInput * m_YawSensivity * transform.up;
-        torque += -rollInput * m_RollSensivity * transform.forward;
+        torque += (-pitchInput * m_PitchSensivity) * t.right;
+        torque += (yawInput * m_YawSensivity) * t.up;
+        torque += (-rollInput * m_RollSensivity) * t.forward;
 
         //전체 토크는 전방 속도와 곱해져서 고속 상황에서 회전력이 높음.
         //즉, 저속 상황에서는 반대로 회전력이 낮음.
         //기체의 기수(nose) 방향으로 기체가 움직이지 않을 경우(실속 중 하강)도 회전력이 낮음.
         //>> 실속 중 하강하는 경우는 회전력이 감소함 >> 자동 회복을 기다려야 함
-        rigidbody.AddTorque(torque * forwardSpeed * angleDifference);
+        rigidbody.AddTorque(torque * (forwardSpeed * angleDifference));
 
     }
 

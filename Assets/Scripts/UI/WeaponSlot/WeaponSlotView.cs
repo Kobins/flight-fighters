@@ -25,7 +25,7 @@ public class WeaponSlotView : MonoBehaviour {
             slot.weapon.transform.localPosition = slot.weapon.m_SlotViewPosition;
             slot.weapon.transform.rotation = Quaternion.Euler(slot.weapon.m_SlotViewRotation);
             slot.weapon.transform.localScale = slot.weapon.m_SlotViewScale;
-            slot.weapon.slotViewing = true;
+            slot.weapon.isSlotDummy = true;
 
             slot.image = uiWeaponSlot.Create(slot);
         }

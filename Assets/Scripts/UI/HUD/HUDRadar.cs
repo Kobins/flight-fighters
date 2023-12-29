@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class HUDRadar : MonoBehaviour {
-    [HideInInspector]
-    public Player player;
 
     public string[] directions = new string[] { "N", "NE", "E", "SE", "S", "SW", "W", "NW" };
 
@@ -16,7 +14,7 @@ public class HUDRadar : MonoBehaviour {
 
     public List<Text> directionMarkers;
     public Dictionary<Transform, Image> markers;
-
+    
     private void Awake() {
         var rect = GetComponent<RectTransform>();
         radarRadius = rect.sizeDelta.x / 2;
@@ -29,9 +27,18 @@ public class HUDRadar : MonoBehaviour {
         }
         markers = new Dictionary<Transform, Image>();
     }
+
+    private Player _player;
+    private Aeroplane _aeroplane;
+    public void Init(Player player) {
+        _player = player;
+        _aeroplane = player.aeroplane;
+    }
+    
     float yaw;
     void Update() {
-        yaw = (player.aeroplane.yawAngle + 360) % 360;
+        if(!_aeroplane) return;
+        yaw = (_aeroplane.yawAngle + 360) % 360;
         //8방위
         for (int i = 0; i < directionMarkers.Count; i++) {
             var xzDelta = Vector3.forward;
@@ -54,9 +61,9 @@ public class HUDRadar : MonoBehaviour {
             markers.Remove(toRemove[i]);
         }
         //구역
-        var areas = new List<Area>(player.controller.map.areaPalette);
+        var areas = new List<Area>(_player.controller.map.areaPalette);
         areas.RemoveAll((a) =>
-            a == null
+            !a 
             || !a.gameObject.activeInHierarchy
         );
         IterateMarker(areas, areaMarkerPrefab);
@@ -64,15 +71,15 @@ public class HUDRadar : MonoBehaviour {
         var vehicles = new List<ArmoredVehicle>(ArmoredVehicle.Vehicles);
         vehicles.RemoveAll((e) =>
             e == null
-            || e.Equals(player.aeroplane)
+            || e.Equals(_aeroplane)
             || !e.gameObject.activeInHierarchy
         );
         IterateMarker(vehicles, enemyMarkerPrefab);
     }
 
     public void IterateMarker<T>(List<T> objects, Image markerPrefab) where T : MonoBehaviour {
-        Image marker;
         for (int i = 0; i < objects.Count; i++) {
+            Image marker;
             if (!markers.ContainsKey(objects[i].transform)) {
                 marker = Instantiate(markerPrefab, transform);
                 markers[objects[i].transform] = marker;
@@ -84,14 +91,14 @@ public class HUDRadar : MonoBehaviour {
     }
 
     public void SetMarkerPosition(Transform target, Image marker) {
-        var deltaPosition = (target.position - player.transform.position);
+        var deltaPosition = (target.position - _aeroplane.transform.position);
         var xzDelta = deltaPosition.ProjectedXZPlane();
-        xzDelta.RotateAroundY(yaw); // 벡터를 원점 기준으로 y축으로 yaw만큼 회전변환
-        xzDelta = Vector3.ClampMagnitude(xzDelta, maxRange); // 길이 제한
+        xzDelta.RotateAroundY(yaw);
+        xzDelta = Vector3.ClampMagnitude(xzDelta, maxRange);
         var position = new Vector2(xzDelta.x, xzDelta.z) / maxRange * radarRadius;
         marker.rectTransform.anchoredPosition = position;
         var xzForward = target.forward.ProjectedXZPlane().normalized;
         xzForward.RotateAroundY(yaw - 90); //화살표 이미지가 위쪽을 보기 때문에
-        marker.rectTransform.rotation = Quaternion.Euler(0, 0, Mathf.Atan2(xzForward.z, xzForward.x) * Mathf.Rad2Deg);
+        marker.rectTransform.localRotation = Quaternion.Euler(0, 0, Mathf.Atan2(xzForward.z, xzForward.x) * Mathf.Rad2Deg);
     }
 }

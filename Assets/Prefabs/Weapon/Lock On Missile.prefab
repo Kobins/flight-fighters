@@ -50,19 +50,18 @@ MonoBehaviour:
   m_ShootPerTrigger: 1
   m_ShootInterval: 0.2
   m_HitMarkDuration: 0.5
+  m_MaxRange: 1500
   m_ShootPositions:
   - {fileID: 7931459324460740978}
   - {fileID: 4904183103937220330}
   holding: 0
-  slotPosition: {x: 2, y: 0, z: 0}
-  slotRotation: {x: -22.5, y: 22.5, z: 0}
-  slotScale: {x: 0.15, y: 0.15, z: 0.15}
-  slotPrefab: {fileID: -791318747405053810, guid: bf23e439b7a63b848b14d38d0a9e0ad0,
-    type: 3}
+  m_SlotViewPosition: {x: 0, y: 0, z: 0}
+  m_SlotViewRotation: {x: -22.5, y: 22.5, z: 0}
+  m_SlotViewScale: {x: 1, y: 1, z: 1}
+  slotPrefab: {fileID: -791318747405053810, guid: bf23e439b7a63b848b14d38d0a9e0ad0, type: 3}
   slotViewing: 0
   attachedWeaponSlot: {fileID: 0}
-  missilePrefab: {fileID: 2103795596282532805, guid: 53b7ef192b35649449d54d17ff3a5786,
-    type: 3}
+  missilePrefab: {fileID: 2103795596282532805, guid: 53b7ef192b35649449d54d17ff3a5786, type: 3}
   m_MaxLockAngle: 30
   m_MaxLockRange: 500
   m_MaxAmmo: 2
@@ -157,6 +156,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -181,6 +181,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!136 &9040139716343343389
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -251,6 +252,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -275,6 +277,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!136 &6708822788745562590
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -377,6 +380,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -401,6 +405,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!136 &6298314435435697797
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -471,6 +476,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -495,6 +501,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
 --- !u!136 &8576993886129239622
 CapsuleCollider:
   m_ObjectHideFlags: 0

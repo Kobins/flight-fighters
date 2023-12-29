@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class LockOnMissileLauncher : Weapon {
+public class LockOnMissileLauncher : Weapon, VRWeapon {
 
     [Header("Missile")]
     public LockOnMissile missilePrefab;
@@ -18,15 +18,20 @@ public class LockOnMissileLauncher : Weapon {
     float reloadingDelay;
     float currentLockTime;
 
+    // VR 플레이어는 카메라 forward와 기체 forward가 다르므로 ...
+    public Transform AttachedCameraTransform { get; set; }
+    
     private void Start() {
+        if(!AttachedCameraTransform) AttachedCameraTransform = attached.transform;
         ammo = m_MaxAmmo;
         shootDelay = 0;
         reloadingDelay = m_ReloadTime;
         currentLockTime = m_LockTime;
     }
 
+
     void Update() {
-        if (slotViewing) return;
+        if (isSlotDummy) return;
         //항상 1발씩 장전
         if (ammo < m_MaxAmmo) {
             if (reloadingDelay > 0) {
@@ -53,18 +58,23 @@ public class LockOnMissileLauncher : Weapon {
             target = null;
             return;
         }
+        var attachedCameraTransform = AttachedCameraTransform;
+        var attachedObject = attached.gameObject;
         var vehicles = new List<ArmoredVehicle>(ArmoredVehicle.Vehicles);
-        vehicles.RemoveAll((e) =>
-            e == null
-            || e.gameObject.GetInstanceID() == attached.gameObject.GetInstanceID()
-            //같은 Enemy일 경우
-            || e.gameObject.tag == attached.gameObject.tag
-            || !e.gameObject.activeInHierarchy
-            //최대 락온 거리 벗어난 경우
-            || Vector3.Distance(e.transform.position, attached.transform.position) > m_MaxLockRange
-            //지정 시야각 벗어난 경우
-            || Vector3.Angle((e.transform.position - attached.transform.position).normalized, attached.transform.forward) > m_MaxLockAngle
-        );
+        vehicles.RemoveAll((e) => {
+            var targetObject = e.gameObject;
+            var targetTransform = e.transform;
+            var attachedToTarget = (targetTransform.position - attachedCameraTransform.position);
+            return !e
+                || targetObject.GetInstanceID() == attachedObject.GetInstanceID()
+                //같은 Enemy일 경우
+                || targetObject.CompareTag(attachedObject.tag)
+                || !targetObject.activeInHierarchy
+                //최대 락온 거리 벗어난 경우
+                || attachedToTarget.magnitude > m_MaxLockRange
+                //지정 시야각 벗어난 경우
+                || Vector3.Angle(attachedToTarget.normalized, attachedCameraTransform.forward) > m_MaxLockAngle;
+        });
         if (vehicles.Count <= 0) {
             target = null;
         }
@@ -74,7 +84,7 @@ public class LockOnMissileLauncher : Weapon {
             float nearest = m_MaxLockAngle + 100;
             foreach (var entity in vehicles) {
                 //가장 기체 방향에 가까운 적 찾기
-                if (Vector3.Angle((entity.transform.position - attached.transform.position), attached.transform.forward) < nearest) {
+                if (Vector3.Angle((entity.transform.position - attachedCameraTransform.position), attachedCameraTransform.forward) < nearest) {
                     target = entity;
                 }
             }
@@ -97,11 +107,12 @@ public class LockOnMissileLauncher : Weapon {
     }
 
     public override void OnShoot() {
-        var shootPos = GetShootPosition();
-        var missile = Instantiate(missilePrefab, shootPos.position, Quaternion.LookRotation(target.transform.position - shootPos.position));
+        var shootPos = GetNextShootPosition();
+        var missile = Instantiate(missilePrefab, shootPos.position, shootPos.rotation);
         missile.launcher = this;
         missile.shooted = attached;
-        missile.target = target;
+        missile.target = target.gameObject;
+        missile.isTargetingVehicle = true;
     }
 
     public override void OnMarkerUpdate(UIEnemyTargetMarker mark, Enemy enemy) {

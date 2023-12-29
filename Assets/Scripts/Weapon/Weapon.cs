@@ -19,7 +19,7 @@ public abstract class Weapon : MonoBehaviour {
     public Vector3 m_SlotViewRotation = new Vector3(-22.5f, 22.5f, 0);
     public Vector3 m_SlotViewScale = new Vector3(1, 1, 1);
     public UIWeaponSlotImage slotPrefab;
-    [HideInInspector] public bool slotViewing;
+    [HideInInspector] public bool isSlotDummy;
     [HideInInspector] public WeaponSlot attachedWeaponSlot;
 
     private void Awake() {
@@ -50,14 +50,12 @@ public abstract class Weapon : MonoBehaviour {
     public virtual bool IsLocking() { return false; }
     public ShootPositionEvent OnGetShootPosition;
 
-    public Transform GetShootPosition() {
-        var pos = m_ShootPositions[shootPositionIndex++];
-        if (shootPositionIndex >= m_ShootPositions.Length) {
-            shootPositionIndex = 0;
-        }
+    public Transform GetNextShootPosition() {
+        var pos = m_ShootPositions[(shootPositionIndex + 1) % m_ShootPositions.Length];
         if (OnGetShootPosition != null) {
-            OnGetShootPosition(pos.position, out Vector3 targetPoint, m_MaxRange);
-            pos.rotation = Quaternion.LookRotation((targetPoint - pos.position));
+            var shootPosition = pos.position;
+            OnGetShootPosition(shootPosition, out Vector3 targetPoint, m_MaxRange);
+            pos.rotation = Quaternion.LookRotation((targetPoint - shootPosition));
         } else {
             pos.rotation = Quaternion.LookRotation(attached.transform.forward);
         }

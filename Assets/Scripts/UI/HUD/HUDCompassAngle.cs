@@ -8,12 +8,8 @@ public class HUDCompassAngle : MonoBehaviour {
         transform = GetComponent<RectTransform>();
     }
 
-    public void SetAngle(int angle) {
-        transform.anchoredPosition = new Vector2(angle * HUDCompass.COMPASS_ANGLE_DISTANCE, 0);
-        if (angle % 45 != 0) {
-            transform.sizeDelta = new Vector2(2, 10);
-        } else {
-            transform.sizeDelta = new Vector2(2, 20);
-        }
+    public void SetAngle(int angle, float angleDistance, Vector2 scale) {
+        transform.anchoredPosition = new Vector2(angle * angleDistance, 0);
+        transform.sizeDelta = scale;
     }
 }

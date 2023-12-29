@@ -15,24 +15,29 @@ public class HUDPitchAndRollAngle : MonoBehaviour {
         transform = GetComponent<RectTransform>();
     }
 
-    public void SetAngle(int angle) {
+    public void SetAngle(int angle, float distance) {
         angle = -angle;
-        transform.anchoredPosition = new Vector2(0, angle * HUDPitchAndRoll.PAR_DISTANCE);
+        transform.anchoredPosition = new Vector2(0, angle * distance);
         leftAngleText.text = angle.ToString();
         rightAngleText.text = angle.ToString();
-        if (angle > 0) { //위로 꺾이게
-            leftAngled.rotation = Quaternion.Euler(0, 0, -(float)angle / 2);
-            rightAngled.rotation = Quaternion.Euler(0, 0, (float)angle / 2);
-        } else if (angle == 0) { //수평
+        //위로 꺾이게
+        if (angle > 0) { 
+            leftAngled.localRotation = Quaternion.Euler(0, 0, -(float)angle / 2);
+            rightAngled.localRotation = Quaternion.Euler(0, 0, (float)angle / 2);
+        }
+        //수평
+        else if (angle == 0) { 
             //수직 막대기 세로크기 0
             leftVertical.sizeDelta = new Vector2(1, 0);
             rightVertical.sizeDelta = new Vector2(1, 0);
-        } else if (angle < 0) { //아래로 꺾이게
-            leftAngled.rotation = Quaternion.Euler(0, 0, (float)angle / 2);
-            rightAngled.rotation = Quaternion.Euler(0, 0, -(float)angle / 2);
+        }
+        //아래로 꺾이게 
+        else { 
+            leftAngled.localRotation = Quaternion.Euler(0, 0, (float)angle / 2);
+            rightAngled.localRotation = Quaternion.Euler(0, 0, -(float)angle / 2);
             //수직 막대기 상하반전
-            leftVertical.rotation = Quaternion.Euler(180, 0, 0);
-            rightVertical.rotation = Quaternion.Euler(180, 0, 0);
+            leftVertical.localRotation = Quaternion.Euler(180, 0, 0);
+            rightVertical.localRotation = Quaternion.Euler(180, 0, 0);
         }
     }
 }

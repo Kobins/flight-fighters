@@ -27,7 +27,7 @@ public class MachineGun : Weapon {
     static readonly Color yellow = new Color(1, 0.92f, 0.016f, 0.5f);
 
     void Update() {
-        if (slotViewing) return;
+        if (isSlotDummy) return;
         if (shootDelay > 0) {
             shootDelay -= TimeManager.deltaTime;
         } else { //열은 발사 딜레이중이 아닐 때 감소함
@@ -59,7 +59,7 @@ public class MachineGun : Weapon {
     }
 
     public override void OnShoot() {
-        var shootPos = GetShootPosition();
+        var shootPos = GetNextShootPosition();
         if (shootEffect) {
             shootEffect.GetEffect(shootPos.position);
         }

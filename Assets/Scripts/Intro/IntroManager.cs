@@ -13,7 +13,7 @@ public enum IntroStatus {
 public class IntroManager : MonoBehaviour {
 
 
-    public IntroCameraController cameraController;
+    // public IntroCameraController cameraController;
     public IntroStatus status = IntroStatus.MAIN;
 
     [Header("Background")]
@@ -79,7 +79,7 @@ public class IntroManager : MonoBehaviour {
         } else {
             selectedAeroplane = defaultAeroplane;
         }
-        cameraController.Init(this);
+        // cameraController.Init(this);
         armory.Init(this);
 
         startButton.onClick.AddListener(delegate { BtnStart(); });

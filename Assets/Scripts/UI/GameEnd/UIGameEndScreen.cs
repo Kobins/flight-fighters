@@ -14,13 +14,6 @@ public class UIGameEndScreen : MonoBehaviour {
     public Text clearText;
     public Text descriptionText;
 
-    [Header("Right")]
-    public Text mapNameText;
-    public Text mapAuthorText;
-    public Text aeroplaneText;
-    public Text elapsedTimeText;
-    public Text elapsedTimeValueText;
-
     const string CLEAR_TEXT = "CLEAR!";
     const string FAILED_TEXT = "MISSION FAILED";
 
@@ -30,11 +23,6 @@ public class UIGameEndScreen : MonoBehaviour {
         panelImage.color = new Color(0, 0, 0, 0);
         clearText.gameObject.SetActive(false);
         descriptionText.gameObject.SetActive(false);
-        mapNameText.gameObject.SetActive(false);
-        mapAuthorText.gameObject.SetActive(false);
-        aeroplaneText.gameObject.SetActive(false);
-        elapsedTimeText.gameObject.SetActive(false);
-        elapsedTimeValueText.gameObject.SetActive(false);
         homeButton.onClick.AddListener(delegate { controller.GoHome(); });
         homeButton.gameObject.SetActive(false);
 
@@ -43,9 +31,6 @@ public class UIGameEndScreen : MonoBehaviour {
 
     public void Init(GameController controller) {
         this.controller = controller;
-        mapNameText.text = controller.map.displayName;
-        mapAuthorText.text = controller.map.author;
-        aeroplaneText.text = controller.selectedAeroplane.name;
     }
     public void SetDescription(string text) {
         descriptionText.text = text;
@@ -72,30 +57,6 @@ public class UIGameEndScreen : MonoBehaviour {
         yield return new WaitForSeconds(1f);
         homeButton.gameObject.SetActive(true);
         yield return new WaitForSeconds(1f);
-        mapNameText.gameObject.SetActive(true);
-        mapAuthorText.gameObject.SetActive(true);
-        yield return new WaitForSeconds(1f);
-        aeroplaneText.gameObject.SetActive(true);
-        yield return new WaitForSeconds(1f);
-        elapsedTimeText.gameObject.SetActive(true);
-        elapsedTimeValueText.text = "00:00:00";
-        elapsedTimeValueText.gameObject.SetActive(true);
-        float time = 0f;
-        while (true) {
-            time = Mathf.Lerp(time, controller.time, 0.1f);
-            elapsedTimeValueText.text = GetTimeText(time);
-            if (controller.time - time <= epsilon) {
-                break;
-            }
-            yield return null;
-        }
-    }
-
-    string GetTimeText(float time) {
-        int hour = (int)(time / 3600);
-        int min = (int)(time / 60) % 60;
-        int sec = (int)(time % 60);
-        return hour.ToString("00") + ":" + min.ToString("00") + ":" + sec.ToString("00");
     }
 
 }

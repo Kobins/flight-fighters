@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Core.VR;
+using UI.VR;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -21,7 +23,10 @@ public class GameController : MonoBehaviour {
     [SerializeField] private GameMap defaultMap = default;
 
     [Header("Camera")]
-    public CameraController cameraController;
+    public VRCameraController cameraController;
+
+    private Camera _camera;
+    private VRCameraPointer _cameraPointer;
 
     [Header("UI")]
     public UIHeadUpDisplay headUpDisplay;
@@ -55,8 +60,12 @@ public class GameController : MonoBehaviour {
         //초기화
         enemyPool.Init(this);
         cameraController.player = player;
-        headUpDisplay.SetPlayer(player);
-        weaponSlotView.Init(plane);
+        _camera = Camera.main;
+        _cameraPointer = _camera.GetComponent<VRCameraPointer>();
+        _cameraPointer.Reticle.gameObject.SetActive(false);
+        headUpDisplay.Init(player);
+        if(weaponSlotView)
+            weaponSlotView.Init(plane);
         enemyTarget.Init(this);
         gameEndScreen.Init(this);
 
@@ -77,7 +86,7 @@ public class GameController : MonoBehaviour {
     }
 
 
-    IEnumerator StartWaitCoroutine() {
+    private IEnumerator StartWaitCoroutine() {
         //이전 씬에서 넘어온 로딩 패널 대기
         GameObject screenObject = GameObject.Find("LoadingScreenCanvas");
         if (screenObject != null) {
@@ -88,16 +97,19 @@ public class GameController : MonoBehaviour {
         loaded = true;
     }
 
-    IEnumerator<MapAction> actionIterator;
+    private IEnumerator<MapAction> actionIterator;
 
-    [HideInInspector] public bool ended;
+    public bool ended;
     private bool loaded;
-    [HideInInspector] public float time;
+    public float time;
     float waitFor;
     bool waitForCondition;
     public Dictionary<string, List<Enemy>> enemies;
 
     void Update() {
+        if (Input.GetKeyDown(KeyCode.Tab)) {
+            ForceGameEnd();
+        }
         if (!loaded) {
             return;
         }
@@ -147,6 +159,22 @@ public class GameController : MonoBehaviour {
         });
         waitForCondition = false;
     }
+    public IEnumerator WaitForWaypointEnd(int index, bool nearest) {
+        var waypoint = map.waypoints[index];
+        bool end = false;
+        player.SetWaypoint(waypoint, nearest, false, () => {
+            end = true;
+        });
+        yield return new WaitUntil(() => {
+            return end;
+        });
+        waitForCondition = false;
+    }
+
+    public void RepeatWaypoint(int index, bool nearest) {
+        var waypoint = map.waypoints[index];
+        player.SetWaypoint(waypoint, nearest, true);
+    }
     public void GenerateEnemy(int index, float x, float y, float z, float yaw, string group = "default") {
         var enemy = enemyPool.GetEnemy(index);
         enemy.transform.position = new Vector3(x, y, z);
@@ -174,19 +202,26 @@ public class GameController : MonoBehaviour {
     public void Radio(string name, string text, float duration) {
         headUpDisplay.Radio(name, text, duration);
     }
+
+    [ContextMenu("Force Game End")]
+    private void ForceGameEnd() => GameEnd(false);
+    
     public void GameEnd(bool isClear) {
         ended = true;
+        headUpDisplay.gameObject.SetActive(false);
+        enemyTarget.gameObject.SetActive(false);
+        _cameraPointer.Reticle.gameObject.SetActive(true);
         gameEndScreen.gameObject.SetActive(true);
         gameEndScreen.GameEnd(isClear);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        var missiles = new List<LockOnMissile>(LockOnMissile.missiles);
+        var missiles = new List<LockOnMissile>(LockOnMissile.Missiles);
         foreach (var missile in missiles) {
             missile.gameObject.SetActive(false);
         }
-        LockOnMissile.missiles.Clear();
+        LockOnMissile.Missiles.Clear();
     }
     public void GoHome() {
         DontDestroyOnLoad(gameObject);

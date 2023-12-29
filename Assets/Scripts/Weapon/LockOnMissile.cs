@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class LockOnMissile : MonoBehaviour {
-    public static List<LockOnMissile> missiles = new List<LockOnMissile>();
+    public static readonly List<LockOnMissile> Missiles = new List<LockOnMissile>();
 
     [HideInInspector] public LockOnMissileLauncher launcher;
     [HideInInspector] public ArmoredVehicle shooted;
-    [HideInInspector] public ArmoredVehicle target;
+    public GameObject target;
+    public bool isTargetingVehicle = true;
 
     [Header("Effects")]
     public CustomEffect explodeEffect;
@@ -19,7 +21,11 @@ public class LockOnMissile : MonoBehaviour {
     public float m_Damage = 50f;
     public float m_MissingTargetDistance = 50f;
     public float m_MaxRange = 10000f;
+    [Header("Flare-Related")] 
+    public float flareRecognizeAngle = 40f;
 
+    private float _flareRecognizeAngleInCos;
+    
     CustomEffect trail;
 
     float time;
@@ -29,6 +35,7 @@ public class LockOnMissile : MonoBehaviour {
     List<Collider> colliders;
 
     private void Awake() {
+        _flareRecognizeAngleInCos = Mathf.Acos(flareRecognizeAngle * Mathf.Deg2Rad);
         colliders = new List<Collider>();
         foreach (var component in GetComponents<Collider>()) {
             colliders.Add(component);
@@ -36,7 +43,7 @@ public class LockOnMissile : MonoBehaviour {
         foreach (var component in GetComponentsInChildren<Collider>()) {
             colliders.Add(component);
         }
-        missiles.Add(this);
+        Missiles.Add(this);
     }
     void Start() {
         time = 0;
@@ -48,13 +55,38 @@ public class LockOnMissile : MonoBehaviour {
             trail.Particle.Play();
             trail.transform.position = transform.position;
         }
+
+        isTargetingVehicle = true;
     }
 
     void FixedUpdate() {
-        if (target != null && target.gameObject.activeInHierarchy) {
+        var t = transform;
+        var position = t.position;
+        var forward = t.forward;
+        if (target && isTargetingVehicle) {
+            Flare findFlare = null;
+            foreach (var flare in Flare.Flares.Values) {
+                // 같은 개체가 쏘지 않은 플레어에 대해 
+                if(flare.Launcher.attached == launcher.attached) continue;
+                var missileToFlare = flare.transform.position - position;
+                var directionToFlare = missileToFlare.normalized;
+                var dot = forward.Dot(directionToFlare);
+                // 일정 시야각 내에 존재하면 그 플레어를 우선해 따라감
+                if (dot > _flareRecognizeAngleInCos) {
+                    findFlare = flare;
+                    break;
+                }
+            }
+
+            if (findFlare) {
+                target = findFlare.gameObject;
+                isTargetingVehicle = false;
+            }
+        }
+        if (target && target.gameObject.activeInHierarchy) {
             transform.rotation = Quaternion.RotateTowards(
                 transform.rotation,
-                Quaternion.LookRotation(target.transform.position - transform.position),
+                Quaternion.LookRotation(target.transform.position - position),
                 m_RotateSpeed * Time.fixedDeltaTime
             );
         }
@@ -73,7 +105,7 @@ public class LockOnMissile : MonoBehaviour {
         if (trail) {
             trail.transform.position = transform.position;
         }
-        if (target == null || !target.gameObject.activeInHierarchy) {
+        if (!target || !target.gameObject.activeInHierarchy) {
             return;
         }
         var local = transform.InverseTransformPoint(target.transform.position);
@@ -85,9 +117,27 @@ public class LockOnMissile : MonoBehaviour {
     }
 
     private void OnTriggerEnter(Collider other) {
+        // Debug.Log($"missile {gameObject.name}::OnTriggerEnter({other.name})");
+        // 지형 충돌
         if (other.CompareTag("Terrain")) {
             launcher.attached.OnWeaponMiss?.Invoke(launcher);
             gameObject.SetActive(false);
+            return;
+        }
+        // 미사일 기만
+        if (isTargetingVehicle && other.CompareTag("Flare")) {
+            var flare = other.GetComponent<Flare>();
+            if (!flare) {
+                Debug.LogWarning($"object {other.name} has tag Flare, but doesn't have component Flare");
+                return;
+            }
+            // 플레어와 미사일의 발사자가 다른 경우에만
+            if (flare.Launcher.attached != launcher.attached) {
+                // Debug.Log($"missile {gameObject.name} targeting flare {flare.gameObject.name}");
+                // 플레어를 따라가도록
+                isTargetingVehicle = false;
+                target = flare.gameObject;
+            }
             return;
         }
         var vehicle = other.transform.GetComponent<ArmoredVehicle>();
@@ -95,7 +145,7 @@ public class LockOnMissile : MonoBehaviour {
             DamageVehicle(vehicle);
             return;
         }
-        if (other.transform.parent != null) {
+        if (other.transform.parent) {
             vehicle = other.transform.parent.GetComponent<ArmoredVehicle>();
             if (vehicle) {
                 DamageVehicle(vehicle);
@@ -114,7 +164,7 @@ public class LockOnMissile : MonoBehaviour {
     }
 
     private void OnDisable() {
-        missiles.Remove(this);
+        Missiles.Remove(this);
         if (trail) {
             trail.Particle.Stop();
         }
